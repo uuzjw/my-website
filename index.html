@@ -20,6 +20,167 @@ h1{margin:0 0 7px;font-size:32px}.desc{color:#9eabc2;margin:0 0 18px;font-size:1
 .restart{margin-top:21px;border:0;border-radius:10px;padding:11px 24px;background:#4d8cff;color:#fff;font-weight:bold;font-size:15px;cursor:pointer}
 .info{margin-top:15px;color:#7f8da6;font-size:12px}
 </style>
+
+<style>
+/* 手机 / 平板 / 电脑自动适配 */
+* { box-sizing: border-box; }
+
+html, body {
+  width: 100%;
+  min-height: 100%;
+  margin: 0;
+}
+
+body {
+  overflow-x: hidden;
+  -webkit-tap-highlight-color: transparent;
+}
+
+button {
+  touch-action: manipulation;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+@media (max-width: 700px) {
+  body {
+    min-height: 100dvh;
+    padding: max(12px, env(safe-area-inset-top))
+             max(12px, env(safe-area-inset-right))
+             max(12px, env(safe-area-inset-bottom))
+             max(12px, env(safe-area-inset-left));
+  }
+
+  .container, .game, .wrapper, main {
+    width: 100%;
+    max-width: 100%;
+  }
+
+  h1 {
+    font-size: clamp(24px, 8vw, 36px);
+    line-height: 1.15;
+  }
+
+  .board {
+    width: min(92vw, 420px);
+    height: min(92vw, 420px);
+    max-width: calc(100vw - 24px);
+    max-height: calc(100vw - 24px);
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  .cell {
+    font-size: clamp(42px, 18vw, 88px);
+    min-width: 0;
+    min-height: 0;
+  }
+
+  .controls, .difficulty, .buttons {
+    width: 100%;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 8px;
+  }
+
+  button {
+    min-height: 44px;
+    padding: 10px 16px;
+    font-size: 16px;
+  }
+}
+
+@media (min-width: 701px) {
+  .board {
+    width: min(72vw, 520px);
+    height: min(72vw, 520px);
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  .cell {
+    font-size: clamp(56px, 9vw, 110px);
+  }
+}
+
+@media (max-height: 560px) and (orientation: landscape) {
+  body {
+    padding-top: 8px;
+    padding-bottom: 8px;
+  }
+
+  .board {
+    width: min(70vh, 420px);
+    height: min(70vh, 420px);
+  }
+
+  h1 {
+    font-size: 24px;
+    margin-top: 4px;
+    margin-bottom: 6px;
+  }
+}
+</style>
+
+
+<style>
+.board {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  grid-template-rows: repeat(3, 1fr);
+  aspect-ratio: 1 / 1;
+}
+
+.cell {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+</style>
+
+
+<style>
+/* 电脑端：一屏完整显示，不需要上下滚动 */
+html, body {
+  min-height: 100%;
+}
+
+body {
+  min-height: 100vh;
+  overflow: hidden;
+}
+
+@media (min-width: 701px) {
+  body {
+    height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+  }
+
+  .container, .game, .wrapper, main {
+    max-height: 100vh;
+    overflow: visible;
+  }
+
+  .board {
+    width: min(60vh, 520px, 72vw);
+    height: min(60vh, 520px, 72vw);
+  }
+}
+
+/* 小屏手机允许页面自然适配，但尽量一屏完成 */
+@media (max-width: 700px) {
+  body {
+    min-height: 100dvh;
+    overflow-y: auto;
+  }
+}
+</style>
+
 </head>
 <body>
 <div class="game">
