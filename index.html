@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>井字棋 - 人机对战</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;min-height:100vh;display:flex;justify-content:center;align-items:center;background:linear-gradient(135deg,#0a1020,#18233d);color:#fff;font-family:Arial,"Microsoft YaHei",sans-serif}
+.game{width:min(94vw,470px);padding:28px;border-radius:24px;background:#141d32;box-shadow:0 20px 70px #0008;text-align:center}
+h1{margin:0 0 7px;font-size:32px}.desc{color:#9eabc2;margin:0 0 18px;font-size:14px}
+.levels{display:flex;gap:8px;justify-content:center;margin-bottom:18px}
+.level{border:1px solid #33435f;background:#202d48;color:#b9c5d8;border-radius:10px;padding:9px 14px;cursor:pointer}
+.level.active{background:#4d8cff;color:#fff;border-color:#4d8cff}
+.status{height:28px;margin-bottom:15px;font-size:18px;font-weight:bold}
+.board{width:min(82vw,360px);margin:auto;display:grid;grid-template-columns:repeat(3,1fr);gap:9px}
+.cell{aspect-ratio:1;border:0;border-radius:15px;background:#263653;color:#fff;font-size:70px;font-weight:800;cursor:pointer}
+.cell:hover:not(:disabled){background:#334667;transform:scale(1.02)}
+.cell:disabled{cursor:default}.x{color:#63a9ff}.o{color:#ff7185}.win{background:#315f4b!important}
+.restart{margin-top:21px;border:0;border-radius:10px;padding:11px 24px;background:#4d8cff;color:#fff;font-weight:bold;font-size:15px;cursor:pointer}
+.info{margin-top:15px;color:#7f8da6;font-size:12px}
+</style>
+</head>
+<body>
+<div class="game">
+<h1>井字棋</h1>
+<p class="desc">你是 X · 对手是 O</p>
+<div class="levels">
+  <button class="level active" data-level="easy">简单</button>
+  <button class="level" data-level="medium">中等</button>
+  <button class="level" data-level="hard">困难</button>
+</div>
+<div class="status" id="status">轮到你下棋</div>
+<div class="board" id="board"></div>
+<button class="restart" onclick="restartGame()">重新开始</button>
+<div class="info" id="info"></div>
+</div>
+
+<script>
+const boardEl=document.getElementById("board");
+const statusEl=document.getElementById("status");
+const infoEl=document.getElementById("info");
+
+let board=Array(9).fill("");
+let gameOver=false;
+let playerTurn=true;
+let level="easy";
+
+const wins=[
+ [0,1,2],[3,4,5],[6,7,8],
+ [0,3,6],[1,4,7],[2,5,8],
+ [0,4,8],[2,4,6]
+];
+
+function render(){
+  boardEl.innerHTML="";
+  board.forEach((v,i)=>{
+    const b=document.createElement("button");
+    b.className="cell"+(v?" "+v.toLowerCase():"");
+    b.textContent=v;
+    b.disabled=!!v||gameOver||!playerTurn;
+    b.onclick=()=>playerMove(i);
+    boardEl.appendChild(b);
+  });
+}
+
+function getResult(b=board){
+  for(const line of wins){
+    const [a,c,d]=line;
+    if(b[a]&&b[a]===b[c]&&b[a]===b[d])
+      return {winner:b[a],line};
+  }
+  if(b.every(Boolean)) return {winner:"draw",line:[]};
+  return null;
+}
+
+function emptyCells(b){
+  return b.map((v,i)=>v===""?i:-1).filter(i=>i!==-1);
+}
+
+function randomChoice(arr){
+  return arr[Math.floor(Math.random()*arr.length)];
+}
+
+// AI：根据难度决定思考程度。
+// 简单：随机走，但会优先处理明显的胜负机会。
+// 中等：会进攻、阻挡，并使用一定概率的策略走法。
+// 困难：使用 minimax 计算最佳落子。
+function aiMove(){
+  const empty=emptyCells(board);
+  if(!empty.length)return;
+
+  let move;
+
+  if(level==="easy"){
+    move=easyAI();
+  }else if(level==="medium"){
+    move=mediumAI();
+  }else{
+    move=hardAI();
+  }
+
+  if(move!==undefined) board[move]="O";
+}
+
+function findWinningMove(b, mark){
+  for(const i of emptyCells(b)){
+    b[i]=mark;
+    const r=getResult(b);
+    b[i]="";
+    if(r&&r.winner===mark)return i;
+  }
+  return undefined;
+}
+
+function easyAI(){
+  // 简单模式：只懂基本的赢棋和阻挡，其余随机。
+  const win=findWinningMove(board,"O");
+  if(win!==undefined)return win;
+
+  const block=findWinningMove(board,"X");
+  if(block!==undefined)return block;
+
+  return randomChoice(emptyCells(board));
+}
+
+function mediumAI(){
+  // 中等模式：先赢棋，再阻挡，然后考虑中心和角落。
+  const win=findWinningMove(board,"O");
+  if(win!==undefined)return win;
+
+  const block=findWinningMove(board,"X");
+  if(block!==undefined)return block;
+
+  if(!board[4] && Math.random()<0.75)return 4;
+
+  const corners=[0,2,6,8].filter(i=>!board[i]);
+  if(corners.length)return randomChoice(corners);
+
+  return randomChoice(emptyCells(board));
+}
+
+function hardAI(){
+  // 困难模式：完整 minimax。
+  let bestScore=-Infinity;
+  let bestMoves=[];
+
+  for(const i of emptyCells(board)){
+    board[i]="O";
+    const score=minimax(board,false);
+    board[i]="";
+
+    if(score>bestScore){
+      bestScore=score;
+      bestMoves=[i];
+    }else if(score===bestScore){
+      bestMoves.push(i);
+    }
+  }
+
+  return randomChoice(bestMoves);
+}
+
+function minimax(b,isMaximizing){
+  const r=getResult(b);
+  if(r){
+    if(r.winner==="O")return 10;
+    if(r.winner==="X")return -10;
+    return 0;
+  }
+
+  if(isMaximizing){
+    let best=-Infinity;
+    for(const i of emptyCells(b)){
+      b[i]="O";
+      best=Math.max(best,minimax(b,false));
+      b[i]="";
+    }
+    return best;
+  }else{
+    let best=Infinity;
+    for(const i of emptyCells(b)){
+      b[i]="X";
+      best=Math.min(best,minimax(b,true));
+      b[i]="";
+    }
+    return best;
+  }
+}
+
+function playerMove(i){
+  if(gameOver||!playerTurn||board[i])return;
+
+  board[i]="X";
+  playerTurn=false;
+  render();
+
+  let r=getResult();
+  if(r){finish(r);return;}
+
+  statusEl.textContent="对手思考中…";
+
+  setTimeout(()=>{
+    if(gameOver)return;
+
+    aiMove();
+
+    r=getResult();
+    if(r){render();finish(r);return;}
+
+    playerTurn=true;
+    statusEl.textContent="轮到你下棋";
+    render();
+  },350);
+}
+
+function finish(r){
+  gameOver=true;
+
+  if(r.winner==="X")statusEl.textContent="🎉 你赢了！";
+  else if(r.winner==="O")statusEl.textContent="🤖 AI 赢了！";
+  else statusEl.textContent="🤝 平局！";
+
+  render();
+  r.line.forEach(i=>boardEl.children[i].classList.add("win"));
+}
+
+function restartGame(){
+  board=Array(9).fill("");
+  gameOver=false;
+  playerTurn=true;
+  statusEl.textContent="轮到你下棋";
+  render();
+}
+
+const descriptions={
+  easy:"简单：AI 只掌握基本的赢棋和阻挡。",
+  medium:"中等：AI 会进攻、阻挡并优先选择有利位置。",
+  hard:"困难：AI 使用完整棋局搜索，基本不会犯错。"
+};
+
+document.querySelectorAll(".level").forEach(btn=>{
+  btn.onclick=()=>{
+    level=btn.dataset.level;
+    document.querySelectorAll(".level").forEach(x=>x.classList.remove("active"));
+    btn.classList.add("active");
+    infoEl.textContent=descriptions[level];
+    restartGame();
+  };
+});
+
+infoEl.textContent=descriptions.easy;
+render();
+</script>
+</body>
+</html>
