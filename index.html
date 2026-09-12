@@ -273,6 +273,88 @@ html, body { width:100%; margin:0; }
 }
 </style>
 
+
+<style>
+.tutorial-btn{
+  margin-top:10px;
+  border:1px solid #33435f;
+  border-radius:10px;
+  padding:10px 18px;
+  background:#202d48;
+  color:#dce6f7;
+  font-weight:bold;
+  font-size:14px;
+  cursor:pointer;
+}
+.tutorial-btn:hover{background:#2b3b5d}
+
+.tutorial-overlay{
+  position:fixed;
+  inset:0;
+  z-index:999;
+  display:none;
+  align-items:center;
+  justify-content:center;
+  padding:20px;
+  background:rgba(4,8,18,.72);
+  backdrop-filter:blur(6px);
+}
+.tutorial-overlay.show{display:flex}
+
+.tutorial-card{
+  width:min(680px,94vw);
+  max-height:min(86vh,720px);
+  overflow:auto;
+  padding:26px;
+  border-radius:22px;
+  background:#141d32;
+  color:#eef4ff;
+  box-shadow:0 25px 90px #000b;
+  text-align:left;
+}
+.tutorial-head{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:16px;
+}
+.tutorial-head h2{margin:0;font-size:26px}
+.close-tutorial{
+  width:40px;height:40px;border:0;border-radius:10px;
+  background:#263653;color:#fff;font-size:24px;cursor:pointer;
+}
+.tutorial-section{margin-top:20px}
+.tutorial-section h3{margin:0 0 10px;font-size:18px}
+.tips-grid{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:10px;
+}
+.tip{
+  padding:13px 14px;
+  border-radius:12px;
+  background:#202d48;
+  color:#c8d4e8;
+  line-height:1.55;
+  font-size:14px;
+}
+.tip b{color:#fff}
+.steps{margin:0;padding-left:22px;color:#c8d4e8;line-height:1.8}
+.practice{
+  margin-top:18px;
+  padding:13px 15px;
+  border-radius:12px;
+  background:#1b2942;
+  color:#bfcce1;
+  font-size:13px;
+}
+@media(max-width:700px){
+  .tutorial-overlay{padding:12px}
+  .tutorial-card{padding:20px;max-height:90dvh}
+  .tips-grid{grid-template-columns:1fr}
+}
+</style>
+
 </head>
 <body>
 <div class="game">
@@ -286,9 +368,60 @@ html, body { width:100%; margin:0; }
 <div class="status" id="status">轮到你下棋</div>
 <div class="board" id="board"></div>
 <button class="restart" onclick="restartGame()">重新开始</button>
+<button class="tutorial-btn" onclick="openTutorial()">📖 井字棋技巧与教程</button>
+
 <div class="info" id="info"></div>
 </div>
 
+
+<div class="tutorial-overlay" id="tutorialOverlay" onclick="closeTutorial(event)">
+  <div class="tutorial-card" onclick="event.stopPropagation()">
+    <div class="tutorial-head">
+      <h2>📖 井字棋技巧与教程</h2>
+      <button class="close-tutorial" onclick="closeTutorial()">×</button>
+    </div>
+
+    <div class="tutorial-section">
+      <h3>🎯 新手教程</h3>
+      <ol class="steps">
+        <li>你是 <b>X</b>，点击任意空格落子。</li>
+        <li>目标是在横、竖或斜线上连成三个 X。</li>
+        <li>同时要观察 AI 的两连子，及时堵住它。</li>
+        <li>如果双方都没有机会连成三个，就会平局。</li>
+      </ol>
+    </div>
+
+    <div class="tutorial-section">
+      <h3>🧠 实用技巧</h3>
+      <div class="tips-grid">
+        <div class="tip"><b>1. 优先抢中心</b><br>第一步通常优先下中间。中心能参与最多的连线。</div>
+        <div class="tip"><b>2. 中心没了抢角</b><br>角落比边上的位置更容易制造双重威胁。</div>
+        <div class="tip"><b>3. 看到两连马上堵</b><br>如果对手下一步能连成三个，必须先封住。</div>
+        <div class="tip"><b>4. 学会“叉子”</b><br>让自己同时形成两个下一步都能获胜的位置，对手通常只能堵一个。</div>
+        <div class="tip"><b>5. 不要只想着进攻</b><br>每落一步都检查：我能赢吗？对手能赢吗？我能制造叉子吗？</div>
+        <div class="tip"><b>6. 后手要冷静</b><br>开局不是中心时，角落和防守通常比随便抢边更好。</div>
+      </div>
+    </div>
+
+    <div class="practice">
+      💡 <b>进阶口诀：</b>先看能不能赢 → 再看要不要堵 → 再制造叉子 → 最后选择中心、角落或边。
+      <br>想练习时，可以从“简单”开始，熟悉后再挑战“困难”。
+    </div>
+  </div>
+</div>
+
+<script>
+function openTutorial(){
+  document.getElementById("tutorialOverlay").classList.add("show");
+}
+function closeTutorial(e){
+  if(e && e.target !== document.getElementById("tutorialOverlay")) return;
+  document.getElementById("tutorialOverlay").classList.remove("show");
+}
+document.addEventListener("keydown", e=>{
+  if(e.key==="Escape") document.getElementById("tutorialOverlay").classList.remove("show");
+});
+</script>
 <script>
 const boardEl=document.getElementById("board");
 const statusEl=document.getElementById("status");
